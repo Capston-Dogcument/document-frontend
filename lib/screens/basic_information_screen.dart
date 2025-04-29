@@ -1,3 +1,4 @@
+import 'package:document/screens/check_obesity_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
@@ -107,6 +108,12 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                         label: '강아지 기본 정보 등록',
                         onPressed: () {
                           // Handle registration logic here
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CheckObesityScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 12),
