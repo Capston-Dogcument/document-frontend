@@ -29,8 +29,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
             children: [
               // ProgressBar
               const ProgressBar(
-                totalWidth: 288.46,
-                positions: [27.92, 93.06, 158, 223.06],
+                steps: [false, false, false, false, false],
               ),
               const SizedBox(height: 20),
 

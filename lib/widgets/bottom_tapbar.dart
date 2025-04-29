@@ -16,10 +16,10 @@ class BottomTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // 고정 너비 제거하고 화면 크기에 맞추기
       width: MediaQuery.of(context).size.width,
-      height: 70, // 높이 줄이기
+      height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.only(bottom: 24), 
       decoration: const BoxDecoration(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -34,8 +34,8 @@ class BottomTabBar extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 36, // 크기 줄이기
-                            height: 36, // 크기 줄이기
+                            width: 36,
+                            height: 36,
                             decoration: ShapeDecoration(
                               color: Colors.black.withOpacity(0.1),
                               shape: RoundedRectangleBorder(
@@ -46,7 +46,7 @@ class BottomTabBar extends StatelessWidget {
                               child: Text(
                                 tabItem.icon,
                                 style: const TextStyle(
-                                  fontSize: 24, // 크기 줄이기
+                                  fontSize: 24,
                                   height: 1.2,
                                 ),
                               ),

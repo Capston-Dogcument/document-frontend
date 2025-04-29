@@ -1,72 +1,68 @@
 import 'package:flutter/material.dart';
 
 class ProgressBar extends StatelessWidget {
-  final double totalWidth; // 전체 길이
-  final List<double> positions; // 각 구간의 위치
-  final Color barColor; // 구간 색상
-  final double circleSize; // 원 크기
-  final Color circleColor; // 원 색상
+  final List<bool> steps; // 각 단계의 진행 상태 (완료/진행 중/아직 안 함)
+  final double totalWidth;
 
   const ProgressBar({
     super.key,
-    required this.totalWidth,
-    required this.positions,
-    this.barColor = const Color(0xFFD1D5DB),
-    this.circleSize = 9.5,
-    this.circleColor = const Color(0xFF4F46E5),
+    required this.steps,
+    this.totalWidth = 300.0, // 기본적으로 300px로 설정, 필요에 따라 조정 가능
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: totalWidth,
-      height: 30,
-      child: Stack(
-        children: [
-          // 바 구간을 동적으로 생성
-          ...positions.map((position) {
-            return Positioned(
-              left: position,
-              top: 14.21,
-              child: Container(
-                width: 37.22,
-                height: 1.32,
-                decoration: BoxDecoration(color: barColor),
-              ),
-            );
-          }).toList(),
-          // 원 모양 생성
-          Positioned(
-            left: 0,
-            top: 2,
-            child: Container(
-              width: circleSize * 2,
-              height: circleSize * 2,
-              decoration: ShapeDecoration(
-                shape: OvalBorder(
-                  side: BorderSide(
-                    width: 6,
-                    color: circleColor,
-                  ),
+    double stepWidth = totalWidth / steps.length;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(steps.length, (index) {
+        bool isCompleted = steps[index];
+        bool isCurrent = index == steps.indexWhere((step) => !step);
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 원형 버튼
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCompleted
+                    ? Colors.blue // 완료된 단계
+                    : isCurrent
+                        ? Colors.purple // 진행 중인 단계
+                        : Colors.grey, // 아직 진행되지 않은 단계
+                border: Border.all(
+                  color: isCompleted ? Colors.blue : Colors.grey,
+                  width: 2,
                 ),
               ),
+              child: isCompleted
+                  ? const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : const SizedBox.shrink(),
             ),
-          ),
-          // 원 내부 작은 점
-          Positioned(
-            left: 9.31,
-            top: 11.25,
-            child: Container(
-              width: circleSize,
-              height: circleSize,
-              decoration: ShapeDecoration(
-                color: circleColor,
-                shape: const OvalBorder(),
+            const SizedBox(height: 8),
+            // 단계 텍스트
+            Text(
+              '단계 ${index + 1}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isCompleted
+                    ? Colors.blue
+                    : isCurrent
+                        ? Colors.purple
+                        : Colors.grey,
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 }
