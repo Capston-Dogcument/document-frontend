@@ -28,16 +28,17 @@ class _TakePhotosScreenState extends State<TakePhotosScreen> {
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final firstCamera = cameras.first;
-
-    _controller = CameraController(
-      firstCamera,
-      ResolutionPreset.high,
-      enableAudio: false,
-    );
-
     try {
+      final cameras = await availableCameras();
+      final firstCamera = cameras.first;
+
+      _controller = CameraController(
+        firstCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.bgra8888,
+      );
+
       await _controller!.initialize();
       if (mounted) {
         setState(() {});
@@ -48,7 +49,7 @@ class _TakePhotosScreenState extends State<TakePhotosScreen> {
   }
 
   Future<void> _takePhoto() async {
-    if (!_controller!.value.isInitialized) {
+    if (_controller == null || !_controller!.value.isInitialized) {
       return;
     }
 
@@ -62,12 +63,16 @@ class _TakePhotosScreenState extends State<TakePhotosScreen> {
         setState(() {
           currentStep++;
         });
-      } else {
-        // 모든 사진 촬영 완료, 결과 페이지로 이동
-        Navigator.pop(context, photos);
       }
     } catch (e) {
       print('사진 촬영 오류: $e');
+    }
+  }
+
+  void _finishPhotos() {
+    if (photos.every((photo) => photo != null)) {
+      final List<XFile> completedPhotos = photos.whereType<XFile>().toList();
+      Navigator.of(context).pop(completedPhotos);
     }
   }
 
@@ -143,7 +148,7 @@ class _TakePhotosScreenState extends State<TakePhotosScreen> {
                     ),
                   ),
                   const Text(
-                    '빨간색 점선 안에 강아지가 들어오도록 사진을 찍어주세요.',
+                    '빨간색 선 안에 강아지가 들어오도록 사진을 찍어주세요.',
                     style: TextStyle(
                       color: Colors.black54,
                       fontSize: 12,
@@ -210,17 +215,21 @@ class _TakePhotosScreenState extends State<TakePhotosScreen> {
                     width: 118,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: TextButton(
-                      onPressed: () {
-                        if (currentStep < 4) {
-                          setState(() {
-                            currentStep++;
-                          });
-                        } else {
-                          Navigator.pop(context, photos);
-                        }
-                      },
+                      onPressed: photos[currentStep] != null
+                          ? () {
+                              if (currentStep < 4) {
+                                setState(() {
+                                  currentStep++;
+                                });
+                              } else {
+                                _finishPhotos();
+                              }
+                            }
+                          : null,
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: photos[currentStep] != null
+                            ? Colors.black
+                            : Colors.grey,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,

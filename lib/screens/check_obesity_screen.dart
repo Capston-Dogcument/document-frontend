@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
 import 'package:document/widgets/progressbar.dart';
+import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:document/screens/take_photos_screen.dart';
 
@@ -13,7 +14,39 @@ class CheckObesityScreen extends StatefulWidget {
 }
 
 class _CheckObesityScreenState extends State<CheckObesityScreen> {
-  File? _imageFile; // 이미지 파일 저장 변수
+  List<XFile>? _photos;
+  int currentPhotoIndex = 0;
+  bool showResult = false;
+
+  // 임시 결과 데이터 (실제로는 백엔드에서 받아올 예정)
+  Map<String, dynamic>? obesityResult;
+
+  Future<void> _navigateToCamera() async {
+    final result = await Navigator.push<List<XFile>>(
+      context,
+      MaterialPageRoute(builder: (context) => const TakePhotosScreen()),
+    );
+
+    if (result != null && result.length == 5) {
+      setState(() {
+        _photos = result;
+        showResult = false;
+        obesityResult = null;
+      });
+    }
+  }
+
+  Future<void> _analyzeObesity() async {
+    // TODO: 백엔드 통신 구현
+    // 임시 결과 데이터
+    setState(() {
+      showResult = true;
+      obesityResult = {
+        "weight": "25",
+        "status": "정상",
+      };
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +59,15 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              // ProgressBar
               const ProgressBar(
-                steps: [true, false, false, false, false], // 첫 단계 진행 중
+                steps: [true, false, false, false, false],
               ),
               const SizedBox(height: 20),
-
-              // Content in a Scrollable Container
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // 설명 텍스트
                       const Text(
                         '강아지의 비만도를 측정하는 페이지입니다.\n'
                         '강아지의 사진은 총 5장이 필요합니다.\n'
@@ -52,70 +81,205 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
 
                       const SizedBox(height: 24),
 
-                      // 이미지 프리뷰
-                      Container(
-                        width: double.infinity,
-                        height: 203,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 1,
+                      // 이미지 프리뷰 (페이지뷰로 구현)
+                      if (_photos != null && _photos!.isNotEmpty)
+                        SizedBox(
+                          height: 203,
+                          child: PageView.builder(
+                            itemCount: _photos!.length,
+                            onPageChanged: (index) {
+                              setState(() {
+                                currentPhotoIndex = index;
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(_photos![index].path),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      else
+                        Container(
+                          width: double.infinity,
+                          height: 203,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.camera_alt_outlined,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  '사진을 촬영해주세요',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: _imageFile != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  _imageFile!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.camera_alt_outlined,
-                                      size: 48,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      '사진을 촬영해주세요',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+
+                      if (_photos != null)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            _photos!.length,
+                            (index) => Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: currentPhotoIndex == index
+                                    ? Colors.black
+                                    : Colors.grey[300],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // 결과 표시
+                      if (showResult && obesityResult != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '두유의 비만도',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                      ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            '체중',
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${obesityResult!["weight"]} kg',
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            '비만도',
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            obesityResult!["status"],
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
 
                       const SizedBox(height: 24),
 
                       // 버튼들
-                      BasicButton(
-                        label: '사진 촬영하러 가기',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const TakePhotosScreen(),
+                      if (_photos == null)
+                        BasicButton(
+                          label: '사진 촬영하러 가기',
+                          onPressed: _navigateToCamera,
+                        )
+                      else ...[
+                        BasicButton(
+                          label: '결과보기',
+                          onPressed: _analyzeObesity,
+                        ),
+                        if (showResult)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: BasicButton(
+                              label: '다음단계',
+                              onPressed: () {
+                                // TODO: 다음 단계로 이동
+                              },
                             ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      BasicButton(
-                        label: '결과보기',
-                        onPressed: () {
-                          // 결과 페이지로 이동
-                        },
-                      ),
+                          ),
+                      ],
                     ],
                   ),
                 ),
