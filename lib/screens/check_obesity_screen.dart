@@ -5,6 +5,7 @@ import 'package:document/widgets/progressbar.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:document/screens/take_photos_screen.dart';
+import 'package:document/screens/check_skin_screen.dart';
 
 class CheckObesityScreen extends StatefulWidget {
   const CheckObesityScreen({super.key});
@@ -275,7 +276,13 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                             child: BasicButton(
                               label: '다음단계',
                               onPressed: () {
-                                // TODO: 다음 단계로 이동
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CheckSkinScreen(),
+                                  ),
+                                );
                               },
                             ),
                           ),
