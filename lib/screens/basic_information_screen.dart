@@ -5,6 +5,8 @@ import 'package:document/widgets/bottom_tapbar.dart';
 import 'package:document/widgets/input_field.dart';
 import 'package:document/widgets/progressbar.dart';
 import 'package:document/widgets/select_button.dart';
+import '../models/dog_info.dart';
+import '../services/dog_info_service.dart';
 
 class BasicInformationScreen extends StatefulWidget {
   const BasicInformationScreen({super.key});
@@ -16,6 +18,20 @@ class BasicInformationScreen extends StatefulWidget {
 class _BasicInformationScreenState extends State<BasicInformationScreen> {
   bool isMaleSelected = false;
   bool isFemaleSelected = false;
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController breedController = TextEditingController();
+  final TextEditingController weightController = TextEditingController();
+  final TextEditingController intakeDateController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    breedController.dispose();
+    weightController.dispose();
+    intakeDateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,24 +57,28 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Input Fields
-                      const InputField(
+                      InputField(
                         label: '이름',
                         hintText: '이름을 입력하세요.',
+                        controller: nameController,
                       ),
                       const SizedBox(height: 12),
-                      const InputField(
+                      InputField(
                         label: '견종',
                         hintText: '견종을 입력하세요. (믹스견인 경우 믹스라고 입력)',
+                        controller: breedController,
                       ),
                       const SizedBox(height: 12),
-                      const InputField(
+                      InputField(
                         label: '체중',
                         hintText: '체중을 입력하세요.',
+                        controller: weightController,
                       ),
                       const SizedBox(height: 12),
-                      const InputField(
+                      InputField(
                         label: '입소 날짜',
                         hintText: '입소한 날짜를 입력하세요. (YYYY.MM.DD)',
+                        controller: intakeDateController,
                       ),
                       const SizedBox(height: 20),
 
@@ -106,14 +126,32 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                       // Submit Button using BasicButton
                       BasicButton(
                         label: '강아지 기본 정보 등록',
-                        onPressed: () {
-                          // Handle registration logic here
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CheckObesityScreen(),
-                            ),
+                        onPressed: () async {
+                          final dogInfo = DogInfo(
+                            name: nameController.text,
+                            breed: breedController.text,
+                            weight:
+                                double.tryParse(weightController.text) ?? 0.0,
+                            intakeDate: intakeDateController.text,
+                            gender: isMaleSelected ? '수컷' : '암컷',
                           );
+
+                          final service = DogInfoService();
+                          final result = await service.registerDogInfo(dogInfo);
+
+                          if (result != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const CheckObesityScreen(),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('등록에 실패했습니다.')),
+                            );
+                          }
                         },
                       ),
                       const SizedBox(height: 12),
