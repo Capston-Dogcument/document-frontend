@@ -139,12 +139,12 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                           final service = DogInfoService();
                           final result = await service.registerDogInfo(dogInfo);
 
-                          if (result != null) {
+                          if (result != null && result.id != null) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const CheckObesityScreen(),
+                                    CheckObesityScreen(dogId: result.id!),
                               ),
                             );
                           } else {
@@ -152,6 +152,21 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                               const SnackBar(content: Text('등록에 실패했습니다.')),
                             );
                           }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // 디버깅용 다음단계 버튼 수정
+                      BasicButton(
+                        label: '다음단계(디버깅용)',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const CheckObesityScreen(dogId: 1), // 임시 ID
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 12),

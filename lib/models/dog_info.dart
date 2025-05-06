@@ -15,27 +15,25 @@ class DogInfo {
     required this.gender,
   });
 
-  factory DogInfo.fromJson(Map<String, dynamic> json) {
-    return DogInfo(
-      id: json['id'],
-      name: json['name'],
-      breed: json['breed'],
-      weight: (json['weight'] is double)
-          ? json['weight']
-          : double.tryParse(json['weight'].toString()) ?? 0.0,
-      intakeDate: json['intakeDate'],
-      gender: json['gender'],
-    );
-  }
-
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
+      'id': id,
       'name': name,
       'breed': breed,
       'weight': weight,
       'intakeDate': intakeDate,
       'gender': gender,
     };
+  }
+
+  factory DogInfo.fromJson(Map<String, dynamic> json) {
+    return DogInfo(
+      id: json['id'],
+      name: json['name'],
+      breed: json['breed'],
+      weight: json['weight'].toDouble(),
+      intakeDate: json['intakeDate'],
+      gender: json['gender'],
+    );
   }
 }

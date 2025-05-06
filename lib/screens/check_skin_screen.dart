@@ -5,6 +5,8 @@ import 'package:document/widgets/progressbar.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:document/screens/take_skin_photo_screen.dart';
+import 'package:document/screens/register_dog_age_screen.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CheckSkinScreen extends StatefulWidget {
   const CheckSkinScreen({super.key});
@@ -17,6 +19,7 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
   XFile? _photo;
   bool showResult = false;
   Map<String, dynamic>? skinResult;
+  final ImagePicker _picker = ImagePicker();
 
   Future<void> _navigateToCamera() async {
     final result = await Navigator.push<XFile>(
@@ -27,6 +30,17 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
     if (result != null) {
       setState(() {
         _photo = result;
+        showResult = false;
+        skinResult = null;
+      });
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _photo = image;
         showResult = false;
         skinResult = null;
       });
@@ -172,9 +186,22 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
 
                       // 버튼들
                       if (_photo == null)
-                        BasicButton(
-                          label: '강아지 피부 사진 등록',
-                          onPressed: _navigateToCamera,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: BasicButton(
+                                label: '카메라로 촬영',
+                                onPressed: _navigateToCamera,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: BasicButton(
+                                label: '갤러리에서 선택',
+                                onPressed: _pickImageFromGallery,
+                              ),
+                            ),
+                          ],
                         )
                       else ...[
                         BasicButton(
@@ -187,7 +214,13 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                             child: BasicButton(
                               label: '다음단계',
                               onPressed: () {
-                                // TODO: 다음 단계로 이동
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const RegisterDogAgeScreen(),
+                                  ),
+                                );
                               },
                             ),
                           ),

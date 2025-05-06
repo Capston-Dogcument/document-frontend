@@ -2,7 +2,7 @@ import 'package:document/screens/crop_skin_photo_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
-import 'package:image_cropper/image_cropper.dart';
+
 
 class TakeSkinPhotoScreen extends StatefulWidget {
   const TakeSkinPhotoScreen({super.key});

@@ -6,20 +6,30 @@ import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:document/screens/take_photos_screen.dart';
 import 'package:document/screens/check_skin_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:document/services/upload_photo_service.dart';
 
 class CheckObesityScreen extends StatefulWidget {
-  const CheckObesityScreen({super.key});
+  final int dogId;
+
+  const CheckObesityScreen({
+    super.key,
+    required this.dogId,
+  });
 
   @override
   State<CheckObesityScreen> createState() => _CheckObesityScreenState();
 }
 
 class _CheckObesityScreenState extends State<CheckObesityScreen> {
+  final ImagePicker _picker = ImagePicker();
+  final UploadPhotoService _uploadService = UploadPhotoService();
+  bool _isLoading = false;
   List<XFile>? _photos;
   int currentPhotoIndex = 0;
   bool showResult = false;
-
-  // 임시 결과 데이터 (실제로는 백엔드에서 받아올 예정)
+  bool _isAnalyzing = false;
+  List<String>? _uploadedUrls;
   Map<String, dynamic>? obesityResult;
 
   Future<void> _navigateToCamera() async {
@@ -37,16 +47,87 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
     }
   }
 
-  Future<void> _analyzeObesity() async {
-    // TODO: 백엔드 통신 구현
-    // 임시 결과 데이터
+  Future<void> _pickImagesFromGallery() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.length == 5) {
+      setState(() {
+        _photos = images;
+        showResult = false;
+        obesityResult = null;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('정확히 5장의 사진을 선택해주세요.')),
+      );
+    }
+  }
+
+  Future<void> _uploadImages() async {
+    if (_photos == null) return;
+
     setState(() {
-      showResult = true;
-      obesityResult = {
-        "weight": "25",
-        "status": "정상",
-      };
+      _isLoading = true;
     });
+
+    try {
+      final List<File> imageFiles =
+          _photos!.map((xFile) => File(xFile.path)).toList();
+
+      final urls = await _uploadService.uploadObesityImages(
+        images: imageFiles,
+        dogId: widget.dogId,
+      );
+
+      setState(() {
+        _uploadedUrls = urls;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이미지 업로드가 완료되었습니다.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이미지 업로드 실패: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _analyzeObesity() async {
+    if (_uploadedUrls == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('먼저 이미지를 업로드해주세요.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isAnalyzing = true;
+    });
+
+    try {
+      // TODO: 실제 비만도 검사 API 호출
+      await Future.delayed(const Duration(seconds: 2)); // 임시 딜레이
+
+      setState(() {
+        showResult = true;
+        obesityResult = {
+          "weight": "25", // TODO: 실제 API 응답으로 대체
+          "status": "정상", // TODO: 실제 API 응답으로 대체
+        };
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('비만도 검사 실패: $e')),
+      );
+    } finally {
+      setState(() {
+        _isAnalyzing = false;
+      });
+    }
   }
 
   @override
@@ -261,15 +342,40 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
 
                       // 버튼들
                       if (_photos == null)
-                        BasicButton(
-                          label: '사진 촬영하러 가기',
-                          onPressed: _navigateToCamera,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: BasicButton(
+                                label: '카메라로 촬영',
+                                onPressed: () => _navigateToCamera(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: BasicButton(
+                                label: '갤러리에서 선택',
+                                onPressed: () => _pickImagesFromGallery(),
+                              ),
+                            ),
+                          ],
                         )
                       else ...[
-                        BasicButton(
-                          label: '결과보기',
-                          onPressed: _analyzeObesity,
-                        ),
+                        if (!showResult) ...[
+                          if (_uploadedUrls == null)
+                            BasicButton(
+                              label: _isLoading ? '업로드 중...' : '이미지 업로드',
+                              onPressed:
+                                  _isLoading ? () {} : () => _uploadImages(),
+                            )
+                          else ...[
+                            BasicButton(
+                              label: _isAnalyzing ? '검사 중...' : '비만도 검사하기',
+                              onPressed: _isAnalyzing
+                                  ? () {}
+                                  : () => _analyzeObesity(),
+                            ),
+                          ],
+                        ],
                         if (showResult)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),

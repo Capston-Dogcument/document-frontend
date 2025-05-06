@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/dog_info.dart';
 
 class DogInfoService {
-  static const String baseUrl = 'http://13.55.158.33:8080';
+  static const String baseUrl = 'http://3.39.47.48:8080';
 
   Future<DogInfo?> registerDogInfo(DogInfo dogInfo) async {
     final url = Uri.parse('$baseUrl/api/dog/info');
