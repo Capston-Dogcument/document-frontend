@@ -77,7 +77,7 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                       const SizedBox(height: 12),
                       InputField(
                         label: '입소 날짜',
-                        hintText: '입소한 날짜를 입력하세요. (YYYY.MM.DD)',
+                        hintText: '입소한 날짜를 입력하세요. (YYYY-MM-DD)',
                         controller: intakeDateController,
                       ),
                       const SizedBox(height: 20),
@@ -143,8 +143,10 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    CheckObesityScreen(dogId: result.id!),
+                                builder: (context) => CheckObesityScreen(
+                                  dogId: result.id!,
+                                  weight: result.weight,
+                                ),
                               ),
                             );
                           } else {
@@ -163,8 +165,10 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const CheckObesityScreen(dogId: 1), // 임시 ID
+                              builder: (context) => const CheckObesityScreen(
+                                dogId: 1,
+                                weight: 4.2, // 임시 값
+                              ),
                             ),
                           );
                         },

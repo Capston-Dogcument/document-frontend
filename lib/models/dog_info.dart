@@ -28,12 +28,12 @@ class DogInfo {
 
   factory DogInfo.fromJson(Map<String, dynamic> json) {
     return DogInfo(
-      id: json['id'],
-      name: json['name'],
-      breed: json['breed'],
-      weight: json['weight'].toDouble(),
-      intakeDate: json['intakeDate'],
-      gender: json['gender'],
+      id: json['id'] as int?,
+      name: json['name'] as String,
+      breed: json['breed'] as String,
+      weight: (json['weight'] as num).toDouble(),
+      intakeDate: json['intakeDate'] as String,
+      gender: json['gender'] as String,
     );
   }
 }

@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 class InputField extends StatelessWidget {
   final String label;
   final String hintText;
-  final TextEditingController? controller;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final bool enabled;
 
   const InputField({
     super.key,
     required this.label,
     required this.hintText,
-    this.controller,
+    required this.controller,
+    this.keyboardType,
+    this.enabled = true,
   });
 
   @override
@@ -37,6 +41,8 @@ class InputField extends StatelessWidget {
           ),
           child: TextFormField(
             controller: controller,
+            keyboardType: keyboardType,
+            enabled: enabled,
             decoration: InputDecoration(
               hintText: hintText,
               border: InputBorder.none,

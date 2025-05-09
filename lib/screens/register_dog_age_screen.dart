@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:document/screens/register_dog_extra_info_screen.dart';
+import 'package:document/widgets/progressbar.dart';
 
 class RegisterDogAgeScreen extends StatefulWidget {
-  const RegisterDogAgeScreen({super.key});
+  final int dogId;
+
+  const RegisterDogAgeScreen({
+    super.key,
+    required this.dogId,
+  });
 
   @override
   State<RegisterDogAgeScreen> createState() => _RegisterDogAgeScreenState();
@@ -47,6 +54,10 @@ class _RegisterDogAgeScreenState extends State<RegisterDogAgeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            const ProgressBar(
+              steps: [true, true, true, false, false],
+            ),
+            const SizedBox(height: 24),
             // 나이 알고/모름 체크박스
             Row(
               children: [
@@ -272,9 +283,35 @@ class _RegisterDogAgeScreenState extends State<RegisterDogAgeScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // 등록 로직 작성
+                  // TODO: API 연동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterDogExtraInfoScreen(
+                        dogId: widget.dogId,
+                      ),
+                    ),
+                  );
                 },
                 child: const Text('강아지 나이 예상하기'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 디버깅용 다음단계 버튼
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterDogExtraInfoScreen(
+                        dogId: widget.dogId,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('다음단계(디버깅용)'),
               ),
             ),
           ],

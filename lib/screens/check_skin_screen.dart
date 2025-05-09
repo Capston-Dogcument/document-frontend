@@ -7,9 +7,15 @@ import 'dart:io';
 import 'package:document/screens/take_skin_photo_screen.dart';
 import 'package:document/screens/register_dog_age_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:document/services/upload_photo_service.dart';
 
 class CheckSkinScreen extends StatefulWidget {
-  const CheckSkinScreen({super.key});
+  final int dogId;
+
+  const CheckSkinScreen({
+    super.key,
+    required this.dogId,
+  });
 
   @override
   State<CheckSkinScreen> createState() => _CheckSkinScreenState();
@@ -20,6 +26,10 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
   bool showResult = false;
   Map<String, dynamic>? skinResult;
   final ImagePicker _picker = ImagePicker();
+  final UploadPhotoService _uploadPhotoService = UploadPhotoService();
+  bool _isLoading = false;
+  bool _isAnalyzing = false;
+  String? _uploadedUrl;
 
   Future<void> _navigateToCamera() async {
     final result = await Navigator.push<XFile>(
@@ -47,15 +57,65 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
     }
   }
 
-  Future<void> _analyzeSkin() async {
-    // TODO: 백엔드 통신 구현
+  Future<void> _uploadImage() async {
+    if (_photo == null) return;
+
     setState(() {
-      showResult = true;
-      skinResult = {
-        "condition": "피부염",
-        "severity": "경증",
-      };
+      _isLoading = true;
     });
+
+    try {
+      final urls = await _uploadPhotoService.uploadSkinImage(
+        image: File(_photo!.path),
+        dogId: widget.dogId,
+      );
+
+      if (urls.isNotEmpty) {
+        setState(() {
+          _uploadedUrl = urls.first;
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('이미지 업로드에 실패했습니다.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이미지 업로드 실패: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _analyzeSkin() async {
+    setState(() {
+      _isAnalyzing = true;
+    });
+
+    try {
+      final result = await _uploadPhotoService.analyzeSkin(widget.dogId);
+      setState(() {
+        showResult = true;
+        skinResult = result;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('피부 질환 분석 실패: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isAnalyzing = false;
+      });
+    }
   }
 
   @override
@@ -161,19 +221,36 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
-                                      '진단',
+                                      '검출된 피부 질환',
                                       style: TextStyle(
                                         color: Colors.black54,
                                         fontSize: 14,
                                       ),
                                     ),
-                                    Text(
-                                      skinResult!["condition"],
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                                    const SizedBox(height: 8),
+                                    if (skinResult!['skinDiseases'].isEmpty)
+                                      const Text(
+                                        '검출된 피부 질환이 없습니다.',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      )
+                                    else
+                                      ...List<String>.from(
+                                              skinResult!['skinDiseases'])
+                                          .map((disease) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 4),
+                                                child: Text(
+                                                  '• $disease',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ))
+                                          .toList(),
                                   ],
                                 ),
                               ),
@@ -204,11 +281,22 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                           ],
                         )
                       else ...[
-                        BasicButton(
-                          label: '결과보기',
-                          onPressed: _analyzeSkin,
-                        ),
-                        if (showResult)
+                        if (!showResult) ...[
+                          if (_uploadedUrl == null)
+                            BasicButton(
+                              label: _isLoading ? '업로드 중...' : '이미지 업로드',
+                              onPressed:
+                                  _isLoading ? () {} : () => _uploadImage(),
+                            )
+                          else ...[
+                            BasicButton(
+                              label: _isAnalyzing ? '분석 중...' : '결과보기',
+                              onPressed:
+                                  _isAnalyzing ? () {} : () => _analyzeSkin(),
+                            ),
+                          ],
+                        ],
+                        if (showResult) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: BasicButton(
@@ -217,13 +305,30 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const RegisterDogAgeScreen(),
+                                    builder: (context) => RegisterDogAgeScreen(
+                                      dogId: widget.dogId,
+                                    ),
                                   ),
                                 );
                               },
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          // 디버깅용 다음단계 버튼
+                          BasicButton(
+                            label: '다음단계(디버깅용)',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RegisterDogAgeScreen(
+                                    dogId: widget.dogId,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ],
                     ],
                   ),

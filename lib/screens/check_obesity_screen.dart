@@ -8,13 +8,16 @@ import 'package:document/screens/take_photos_screen.dart';
 import 'package:document/screens/check_skin_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:document/services/upload_photo_service.dart';
+import 'package:document/services/dog_info_service.dart';
 
 class CheckObesityScreen extends StatefulWidget {
   final int dogId;
+  final double weight; // 기존 몸무게 정보 추가
 
   const CheckObesityScreen({
     super.key,
     required this.dogId,
+    required this.weight,
   });
 
   @override
@@ -24,6 +27,7 @@ class CheckObesityScreen extends StatefulWidget {
 class _CheckObesityScreenState extends State<CheckObesityScreen> {
   final ImagePicker _picker = ImagePicker();
   final UploadPhotoService _uploadService = UploadPhotoService();
+  final DogInfoService _dogInfoService = DogInfoService();
   bool _isLoading = false;
   List<XFile>? _photos;
   int currentPhotoIndex = 0;
@@ -31,6 +35,26 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
   bool _isAnalyzing = false;
   List<String>? _uploadedUrls;
   Map<String, dynamic>? obesityResult;
+  String? dogName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDogInfo();
+  }
+
+  Future<void> _loadDogInfo() async {
+    try {
+      final dogInfo = await _dogInfoService.getDogInfo(widget.dogId);
+      if (dogInfo != null) {
+        setState(() {
+          dogName = dogInfo.name;
+        });
+      }
+    } catch (e) {
+      print('Error loading dog info: $e');
+    }
+  }
 
   Future<void> _navigateToCamera() async {
     final result = await Navigator.push<List<XFile>>(
@@ -109,14 +133,13 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
     });
 
     try {
-      // TODO: 실제 비만도 검사 API 호출
-      await Future.delayed(const Duration(seconds: 2)); // 임시 딜레이
+      final result = await _uploadService.analyzeObesity(widget.dogId);
 
       setState(() {
         showResult = true;
         obesityResult = {
-          "weight": "25", // TODO: 실제 API 응답으로 대체
-          "status": "정상", // TODO: 실제 API 응답으로 대체
+          "weight": widget.weight.toString(),
+          "status": result['obesityScore'],
         };
       });
     } catch (e) {
@@ -258,9 +281,9 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                '두유의 비만도',
-                                style: TextStyle(
+                              Text(
+                                '${dogName ?? '강아지'}의 비만도',
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -376,7 +399,7 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                             ),
                           ],
                         ],
-                        if (showResult)
+                        if (showResult) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: BasicButton(
@@ -385,13 +408,30 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const CheckSkinScreen(),
+                                    builder: (context) => CheckSkinScreen(
+                                      dogId: widget.dogId,
+                                    ),
                                   ),
                                 );
                               },
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          // 디버깅용 다음단계 버튼
+                          BasicButton(
+                            label: '다음단계(디버깅용)',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CheckSkinScreen(
+                                    dogId: widget.dogId,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ],
                     ],
                   ),
