@@ -263,36 +263,96 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
 
                       // 버튼들
                       if (_photo == null)
-                        Row(
+                        Column(
                           children: [
-                            Expanded(
-                              child: BasicButton(
-                                label: '카메라로 촬영',
-                                onPressed: _navigateToCamera,
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: BasicButton(
+                                    label: '카메라로 촬영',
+                                    onPressed: _navigateToCamera,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: BasicButton(
+                                    label: '갤러리에서 선택',
+                                    onPressed: _pickImageFromGallery,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: BasicButton(
-                                label: '갤러리에서 선택',
-                                onPressed: _pickImageFromGallery,
-                              ),
+                            const SizedBox(height: 12),
+                            // 디버깅용 다음단계 버튼
+                            BasicButton(
+                              label: '다음단계(디버깅용)',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterDogAgeScreen(
+                                      dogId: widget.dogId,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         )
                       else ...[
                         if (!showResult) ...[
                           if (_uploadedUrl == null)
-                            BasicButton(
-                              label: _isLoading ? '업로드 중...' : '이미지 업로드',
-                              onPressed:
-                                  _isLoading ? () {} : () => _uploadImage(),
+                            Column(
+                              children: [
+                                BasicButton(
+                                  label: _isLoading ? '업로드 중...' : '이미지 업로드',
+                                  onPressed:
+                                      _isLoading ? () {} : () => _uploadImage(),
+                                ),
+                                const SizedBox(height: 12),
+                                // 디버깅용 다음단계 버튼
+                                BasicButton(
+                                  label: '다음단계(디버깅용)',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            RegisterDogAgeScreen(
+                                          dogId: widget.dogId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             )
                           else ...[
-                            BasicButton(
-                              label: _isAnalyzing ? '분석 중...' : '결과보기',
-                              onPressed:
-                                  _isAnalyzing ? () {} : () => _analyzeSkin(),
+                            Column(
+                              children: [
+                                BasicButton(
+                                  label: _isAnalyzing ? '분석 중...' : '결과보기',
+                                  onPressed: _isAnalyzing
+                                      ? () {}
+                                      : () => _analyzeSkin(),
+                                ),
+                                const SizedBox(height: 12),
+                                // 디버깅용 다음단계 버튼
+                                BasicButton(
+                                  label: '다음단계(디버깅용)',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            RegisterDogAgeScreen(
+                                          dogId: widget.dogId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ],

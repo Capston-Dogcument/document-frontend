@@ -48,4 +48,57 @@ class DogInfoService {
       return null;
     }
   }
+
+  Future<Map<String, dynamic>> saveDogAge(int dogId, int age) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/dog/age/save/$dogId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'age': age}),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to save dog age: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error saving dog age: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> predictDogAge(
+    int dogId, {
+    required bool hasDeciduousTeeth,
+    required int toothWearLevel,
+    required bool hasTartar,
+    required bool hasToothDamage,
+    required String eyeColor,
+    required int grayHairLevelAroundNose,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/dog/age/predict/$dogId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'hasDeciduousTeeth': hasDeciduousTeeth,
+          'toothWearLevel': toothWearLevel,
+          'hasTartar': hasTartar,
+          'hasToothDamage': hasToothDamage,
+          'eyeColor': eyeColor,
+          'grayHairLevelAroundNose': grayHairLevelAroundNose,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to predict dog age: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error predicting dog age: $e');
+      rethrow;
+    }
+  }
 }

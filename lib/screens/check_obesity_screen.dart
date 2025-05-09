@@ -365,37 +365,95 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
 
                       // 버튼들
                       if (_photos == null)
-                        Row(
+                        Column(
                           children: [
-                            Expanded(
-                              child: BasicButton(
-                                label: '카메라로 촬영',
-                                onPressed: () => _navigateToCamera(),
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: BasicButton(
+                                    label: '카메라로 촬영',
+                                    onPressed: () => _navigateToCamera(),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: BasicButton(
+                                    label: '갤러리에서 선택',
+                                    onPressed: () => _pickImagesFromGallery(),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: BasicButton(
-                                label: '갤러리에서 선택',
-                                onPressed: () => _pickImagesFromGallery(),
-                              ),
+                            const SizedBox(height: 12),
+                            // 디버깅용 다음단계 버튼
+                            BasicButton(
+                              label: '다음단계(디버깅용)',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CheckSkinScreen(
+                                      dogId: widget.dogId,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         )
                       else ...[
                         if (!showResult) ...[
                           if (_uploadedUrls == null)
-                            BasicButton(
-                              label: _isLoading ? '업로드 중...' : '이미지 업로드',
-                              onPressed:
-                                  _isLoading ? () {} : () => _uploadImages(),
+                            Column(
+                              children: [
+                                BasicButton(
+                                  label: _isLoading ? '업로드 중...' : '이미지 업로드',
+                                  onPressed: _isLoading
+                                      ? () {}
+                                      : () => _uploadImages(),
+                                ),
+                                const SizedBox(height: 12),
+                                // 디버깅용 다음단계 버튼
+                                BasicButton(
+                                  label: '다음단계(디버깅용)',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CheckSkinScreen(
+                                          dogId: widget.dogId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             )
                           else ...[
-                            BasicButton(
-                              label: _isAnalyzing ? '검사 중...' : '비만도 검사하기',
-                              onPressed: _isAnalyzing
-                                  ? () {}
-                                  : () => _analyzeObesity(),
+                            Column(
+                              children: [
+                                BasicButton(
+                                  label: _isAnalyzing ? '검사 중...' : '비만도 검사하기',
+                                  onPressed: _isAnalyzing
+                                      ? () {}
+                                      : () => _analyzeObesity(),
+                                ),
+                                const SizedBox(height: 12),
+                                // 디버깅용 다음단계 버튼
+                                BasicButton(
+                                  label: '다음단계(디버깅용)',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CheckSkinScreen(
+                                          dogId: widget.dogId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ],
