@@ -1,8 +1,10 @@
+import 'package:document/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/screens/register_dog_extra_info_screen.dart';
 import 'package:document/widgets/progressbar.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/services/dog_info_service.dart';
+import 'package:document/widgets/bottom_tapbar.dart';
 
 class RegisterDogAgeScreen extends StatefulWidget {
   final int dogId;
@@ -404,23 +406,27 @@ class _RegisterDogAgeScreenState extends State<RegisterDogAgeScreen> {
                   : (knowsAge ? '강아지 나이 입력하기' : '강아지 나이 예상하기'),
               onPressed: _isLoading ? () {} : _handleSubmit,
             ),
-            const SizedBox(height: 12),
-            // 디버깅용 다음단계 버튼
-            BasicButton(
-              label: '다음단계(디버깅용)',
-              onPressed: () {
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomTabBar(
+        tabItems: [
+          TabItem(
+              icon: '🏠',
+              label: '대시보드',
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RegisterDogExtraInfoScreen(
-                      dogId: widget.dogId,
-                    ),
+                    builder: (context) => const DashboardScreen(),
                   ),
                 );
-              },
-            ),
-          ],
-        ),
+              }),
+          TabItem(icon: '🐶', label: '등록', onTap: () {}),
+          TabItem(icon: '📊', label: '건강', onTap: () {}),
+          TabItem(icon: '🏡', label: '입양', onTap: () {}),
+          TabItem(icon: '🛠️', label: '설정', onTap: () {}),
+        ],
       ),
     );
   }

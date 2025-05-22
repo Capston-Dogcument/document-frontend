@@ -1,4 +1,5 @@
 import 'package:document/screens/check_obesity_screen.dart';
+import 'package:document/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
@@ -18,16 +19,22 @@ class BasicInformationScreen extends StatefulWidget {
 class _BasicInformationScreenState extends State<BasicInformationScreen> {
   bool isMaleSelected = false;
   bool isFemaleSelected = false;
+  String? selectedBreed;
 
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController breedController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
   final TextEditingController intakeDateController = TextEditingController();
+
+  final Map<String, String> breedCodes = {
+    '비숑': 'BIC',
+    '말티즈': 'MAL',
+    '포메라니안': 'POM',
+    '푸들': 'POO',
+  };
 
   @override
   void dispose() {
     nameController.dispose();
-    breedController.dispose();
     weightController.dispose();
     intakeDateController.dispose();
     super.dispose();
@@ -63,12 +70,43 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                         controller: nameController,
                       ),
                       const SizedBox(height: 12),
-                      InputField(
-                        label: '견종',
-                        hintText: '견종을 입력하세요. (믹스견인 경우 믹스라고 입력)',
-                        controller: breedController,
+
+                      // 견종 선택 드롭다운
+                      const Text(
+                        '견종',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedBreed,
+                            isExpanded: true,
+                            hint: const Text('견종을 선택하세요'),
+                            items: breedCodes.keys.map((String breed) {
+                              return DropdownMenuItem<String>(
+                                value: breed,
+                                child: Text(breed),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedBreed = newValue;
+                              });
+                            },
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 12),
+
                       InputField(
                         label: '체중',
                         hintText: '체중을 입력하세요.',
@@ -127,9 +165,16 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
                       BasicButton(
                         label: '강아지 기본 정보 등록',
                         onPressed: () async {
+                          if (selectedBreed == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('견종을 선택해주세요.')),
+                            );
+                            return;
+                          }
+
                           final dogInfo = DogInfo(
                             name: nameController.text,
-                            breed: breedController.text,
+                            breed: breedCodes[selectedBreed]!,
                             weight:
                                 double.tryParse(weightController.text) ?? 0.0,
                             intakeDate: intakeDateController.text,
@@ -184,7 +229,17 @@ class _BasicInformationScreenState extends State<BasicInformationScreen> {
       ),
       bottomNavigationBar: BottomTabBar(
         tabItems: [
-          TabItem(icon: '🏠', label: '대시보드', onTap: () {}),
+          TabItem(
+              icon: '🏠',
+              label: '대시보드',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                  ),
+                );
+              }),
           TabItem(icon: '🐶', label: '등록', onTap: () {}),
           TabItem(icon: '📊', label: '건강', onTap: () {}),
           TabItem(icon: '🏡', label: '입양', onTap: () {}),

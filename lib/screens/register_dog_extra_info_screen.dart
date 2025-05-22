@@ -1,9 +1,12 @@
+import 'package:document/screens/dashboard_screen.dart';
+import 'package:document/screens/dog_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/models/dog_extra_info.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
 import 'package:document/widgets/progressbar.dart';
 import 'package:document/widgets/input_field.dart';
+import 'package:document/services/dog_info_service.dart';
 
 class RegisterDogExtraInfoScreen extends StatefulWidget {
   final int dogId;
@@ -44,6 +47,9 @@ class _RegisterDogExtraInfoScreenState
   DateTime? medicineStartDate;
   DateTime? medicineEndDate;
 
+  final DogInfoService _dogInfoService = DogInfoService();
+  bool _isLoading = false;
+
   @override
   void dispose() {
     vaccinationController.dispose();
@@ -81,6 +87,79 @@ class _RegisterDogExtraInfoScreenState
           }
         }
       });
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 영양제 정보 준비
+      List<Map<String, dynamic>> supplements = [];
+      if (isTakingSupplements && supplementsController.text.isNotEmpty) {
+        supplements.add({
+          'name': supplementsController.text,
+          'intervalDay': int.tryParse(supplementFrequencyController.text) ?? 0,
+          'timesPerInterval':
+              int.tryParse(supplementTimesPerDayController.text) ?? 0,
+          'doseStartDate': supplementStartDate?.toString().split(' ')[0] ?? '',
+          'doseEndDate': supplementEndDate?.toString().split(' ')[0] ?? '',
+        });
+      }
+
+      // 약 정보 준비
+      List<Map<String, dynamic>> medications = [];
+      if (isTakingMedicine && medicinesController.text.isNotEmpty) {
+        medications.add({
+          'name': medicinesController.text,
+          'intervalDay': int.tryParse(medicineFrequencyController.text) ?? 0,
+          'timesPerInterval':
+              int.tryParse(medicineTimesPerDayController.text) ?? 0,
+          'doseStartDate': medicineStartDate?.toString().split(' ')[0] ?? '',
+          'doseEndDate': medicineEndDate?.toString().split(' ')[0] ?? '',
+        });
+      }
+
+      await _dogInfoService.saveDogDetail(
+        widget.dogId,
+        vaccination: vaccinationController.text,
+        isNeutered: isNeutered,
+        diseaseInfo: diseasesController.text,
+        takesSupplements: isTakingSupplements,
+        supplement: supplements,
+        takesMedication: isTakingMedicine,
+        medication: medications,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('강아지 상세 정보가 저장되었습니다.')),
+        );
+
+        // 강아지 상세 화면으로 이동
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DogDetailScreen(
+              dogId: widget.dogId,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('정보 저장 실패: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -368,32 +447,8 @@ class _RegisterDogExtraInfoScreenState
 
                       // 등록 버튼
                       BasicButton(
-                        label: '강아지 기타 정보 등록하기',
-                        onPressed: () {
-                          // TODO: API 연동
-                          final extraInfo = DogExtraInfo(
-                            vaccinationStatus: vaccinationController.text,
-                            isNeutered: isNeutered,
-                            diseases: diseasesController.text,
-                            isTakingSupplements: isTakingSupplements,
-                            supplements: supplementsController.text,
-                            supplementFrequency: int.tryParse(
-                                supplementFrequencyController.text),
-                            supplementTimesPerDay: int.tryParse(
-                                supplementTimesPerDayController.text),
-                            supplementStartDate: supplementStartDate,
-                            supplementEndDate: supplementEndDate,
-                            isTakingMedicine: isTakingMedicine,
-                            medicines: medicinesController.text,
-                            medicineFrequency:
-                                int.tryParse(medicineFrequencyController.text),
-                            medicineTimesPerDay: int.tryParse(
-                                medicineTimesPerDayController.text),
-                            medicineStartDate: medicineStartDate,
-                            medicineEndDate: medicineEndDate,
-                          );
-                          print(extraInfo.toJson());
-                        },
+                        label: _isLoading ? '저장 중...' : '강아지 기타 정보 등록하기',
+                        onPressed: _isLoading ? () {} : _handleSubmit,
                       ),
                     ],
                   ),
@@ -405,7 +460,17 @@ class _RegisterDogExtraInfoScreenState
       ),
       bottomNavigationBar: BottomTabBar(
         tabItems: [
-          TabItem(icon: '🏠', label: '대시보드', onTap: () {}),
+          TabItem(
+              icon: '🏠',
+              label: '대시보드',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                  ),
+                );
+              }),
           TabItem(icon: '🐶', label: '등록', onTap: () {}),
           TabItem(icon: '📊', label: '건강', onTap: () {}),
           TabItem(icon: '🏡', label: '입양', onTap: () {}),

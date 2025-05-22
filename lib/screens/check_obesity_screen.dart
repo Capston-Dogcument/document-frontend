@@ -1,3 +1,4 @@
+import 'package:document/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
@@ -57,17 +58,85 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
   }
 
   Future<void> _navigateToCamera() async {
-    final result = await Navigator.push<List<XFile>>(
-      context,
-      MaterialPageRoute(builder: (context) => const TakePhotosScreen()),
+    // 경고 알림 표시
+    final bool? proceed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('주의사항'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Container(
+              //   width: 331,
+              //   height: 224,
+              //   decoration: ShapeDecoration(
+              //     color: Colors.white,
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(10),
+              //     ),
+              //   ),
+              // ),
+              SizedBox(height: 16),
+              Text(
+                '강아지의 털이 너무 길어 갈비뼈가\n'
+                '육안으로 보이지않거나,\n'
+                '형태를 확인할 수 없는 경우 비만도 측정이\n'
+                '정확하게 나오기 어렵습니다.\n'
+                '털이 과도하게 긴 경우,\n'
+                '미용이 끝난 후 다시 측정해주세요',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // 건너뛰기
+              },
+              child: const Text('건너뛰기'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // 확인
+              },
+              child: const Text('확인'),
+            ),
+          ],
+        );
+      },
     );
 
-    if (result != null && result.length == 5) {
-      setState(() {
-        _photos = result;
-        showResult = false;
-        obesityResult = null;
-      });
+    if (proceed == null) return; // 다이얼로그가 닫힌 경우
+
+    if (proceed) {
+      // 확인 버튼을 눌렀을 때
+      final result = await Navigator.push<List<XFile>>(
+        context,
+        MaterialPageRoute(builder: (context) => const TakePhotosScreen()),
+      );
+
+      if (result != null && result.length == 5) {
+        setState(() {
+          _photos = result;
+          showResult = false;
+          obesityResult = null;
+        });
+      }
+    } else {
+      // 건너뛰기 버튼을 눌렀을 때
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CheckSkinScreen(
+            dogId: widget.dogId,
+          ),
+        ),
+      );
     }
   }
 
@@ -384,21 +453,6 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            // 디버깅용 다음단계 버튼
-                            BasicButton(
-                              label: '다음단계(디버깅용)',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CheckSkinScreen(
-                                      dogId: widget.dogId,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
                           ],
                         )
                       else ...[
@@ -412,21 +466,6 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                                       ? () {}
                                       : () => _uploadImages(),
                                 ),
-                                const SizedBox(height: 12),
-                                // 디버깅용 다음단계 버튼
-                                BasicButton(
-                                  label: '다음단계(디버깅용)',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CheckSkinScreen(
-                                          dogId: widget.dogId,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ],
                             )
                           else ...[
@@ -437,21 +476,6 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                                   onPressed: _isAnalyzing
                                       ? () {}
                                       : () => _analyzeObesity(),
-                                ),
-                                const SizedBox(height: 12),
-                                // 디버깅용 다음단계 버튼
-                                BasicButton(
-                                  label: '다음단계(디버깅용)',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => CheckSkinScreen(
-                                          dogId: widget.dogId,
-                                        ),
-                                      ),
-                                    );
-                                  },
                                 ),
                               ],
                             ),
@@ -474,21 +498,6 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          // 디버깅용 다음단계 버튼
-                          BasicButton(
-                            label: '다음단계(디버깅용)',
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CheckSkinScreen(
-                                    dogId: widget.dogId,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
                         ],
                       ],
                     ],
@@ -501,7 +510,17 @@ class _CheckObesityScreenState extends State<CheckObesityScreen> {
       ),
       bottomNavigationBar: BottomTabBar(
         tabItems: [
-          TabItem(icon: '🏠', label: '대시보드', onTap: () {}),
+          TabItem(
+              icon: '🏠',
+              label: '대시보드',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                  ),
+                );
+              }),
           TabItem(icon: '🐶', label: '등록', onTap: () {}),
           TabItem(icon: '📊', label: '건강', onTap: () {}),
           TabItem(icon: '🏡', label: '입양', onTap: () {}),

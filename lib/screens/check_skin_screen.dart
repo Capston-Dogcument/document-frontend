@@ -1,3 +1,4 @@
+import 'package:document/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:document/widgets/basic_button.dart';
 import 'package:document/widgets/bottom_tapbar.dart';
@@ -32,17 +33,75 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
   String? _uploadedUrl;
 
   Future<void> _navigateToCamera() async {
-    final result = await Navigator.push<XFile>(
-      context,
-      MaterialPageRoute(builder: (context) => const TakeSkinPhotoScreen()),
+    final bool? proceed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('주의사항'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'images/dog_skin_ex.png',
+                width: 180,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '다음 사진과 같이 피부 질환으로 의심되는 부위를\n'
+                '확대하여 찍어주세요.\n'
+                '만약 피부 질환으로 의심되는 부위가 존재하지\n'
+                '않는다면, 이 단계는 건너뛰어도 좋습니다.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, height: 1.5),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // 건너뛰기
+              },
+              child: const Text('건너뛰기'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // 확인
+              },
+              child: const Text('확인'),
+            ),
+          ],
+        );
+      },
     );
 
-    if (result != null) {
-      setState(() {
-        _photo = result;
-        showResult = false;
-        skinResult = null;
-      });
+    if (proceed == null) return;
+
+    if (proceed) {
+      // 확인: 사진 촬영 화면으로 이동
+      final result = await Navigator.push<XFile>(
+        context,
+        MaterialPageRoute(builder: (context) => const TakeSkinPhotoScreen()),
+      );
+
+      if (result != null) {
+        setState(() {
+          _photo = result;
+          showResult = false;
+          skinResult = null;
+        });
+      }
+    } else {
+      // 건너뛰기: 나이 등록 화면으로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RegisterDogAgeScreen(
+            dogId: widget.dogId,
+          ),
+        ),
+      );
     }
   }
 
@@ -70,27 +129,26 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
         dogId: widget.dogId,
       );
 
+      if (!mounted) return;
+
       if (urls.isNotEmpty) {
         setState(() {
           _uploadedUrl = urls.first;
         });
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('이미지 업로드에 실패했습니다.')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('이미지 업로드 실패: $e')),
+          const SnackBar(content: Text('이미지 업로드에 실패했습니다.')),
         );
       }
-    } finally {
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이미지 업로드 실패: $e')),
+      );
     }
   }
 
@@ -282,21 +340,6 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            // 디버깅용 다음단계 버튼
-                            BasicButton(
-                              label: '다음단계(디버깅용)',
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RegisterDogAgeScreen(
-                                      dogId: widget.dogId,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
                           ],
                         )
                       else ...[
@@ -309,22 +352,6 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                                   onPressed:
                                       _isLoading ? () {} : () => _uploadImage(),
                                 ),
-                                const SizedBox(height: 12),
-                                // 디버깅용 다음단계 버튼
-                                BasicButton(
-                                  label: '다음단계(디버깅용)',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            RegisterDogAgeScreen(
-                                          dogId: widget.dogId,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ],
                             )
                           else ...[
@@ -335,22 +362,6 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                                   onPressed: _isAnalyzing
                                       ? () {}
                                       : () => _analyzeSkin(),
-                                ),
-                                const SizedBox(height: 12),
-                                // 디버깅용 다음단계 버튼
-                                BasicButton(
-                                  label: '다음단계(디버깅용)',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            RegisterDogAgeScreen(
-                                          dogId: widget.dogId,
-                                        ),
-                                      ),
-                                    );
-                                  },
                                 ),
                               ],
                             ),
@@ -373,21 +384,6 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          // 디버깅용 다음단계 버튼
-                          BasicButton(
-                            label: '다음단계(디버깅용)',
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RegisterDogAgeScreen(
-                                    dogId: widget.dogId,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
                         ],
                       ],
                     ],
@@ -400,7 +396,17 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
       ),
       bottomNavigationBar: BottomTabBar(
         tabItems: [
-          TabItem(icon: '🏠', label: '대시보드', onTap: () {}),
+          TabItem(
+              icon: '🏠',
+              label: '대시보드',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                  ),
+                );
+              }),
           TabItem(icon: '🐶', label: '등록', onTap: () {}),
           TabItem(icon: '📊', label: '건강', onTap: () {}),
           TabItem(icon: '🏡', label: '입양', onTap: () {}),
@@ -408,5 +414,11 @@ class _CheckSkinScreenState extends State<CheckSkinScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _photo = null;
+    super.dispose();
   }
 }

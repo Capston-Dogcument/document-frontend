@@ -33,8 +33,9 @@ dependencies:
   cupertino_icons: ^1.0.2
   camera: ^0.10.5+9
   image_cropper: ^6.0.0
-  http: ^1.2.0
-  image_picker: ^1.0.8
+  http: ^1.1.0
+  image_picker: ^1.0.4
+  intl: ^0.19.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -87,3 +88,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+  assets:
+    - images/
